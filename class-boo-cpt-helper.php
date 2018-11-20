@@ -181,29 +181,35 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 				 * @link https://gist.github.com/creativembers/6577149
 				 * @link http://justintadlock.com/archives/2010/07/10/meta-capabilities-for-custom-post-types
 				 */
-				$args['capabilities'] = array(
 
-					// Meta capabilities
-					'edit_post'              => 'edit_' . strtolower( $args['singular'] ),
-					'read_post'              => 'read_' . strtolower( $args['singular'] ),
-					'delete_post'            => 'delete_' . strtolower( $args['singular'] ),
+				if ( ! isset( $args['capabilities'] ) ) {
 
-					// Primitive capabilities used outside of map_meta_cap():
-					'edit_posts'             => 'edit_' . strtolower( $args['plural'] ),
-					'edit_others_posts'      => 'edit_others_' . strtolower( $args['plural'] ),
-					'publish_posts'          => 'publish_' . strtolower( $args['plural'] ),
-					'read_private_posts'     => 'read_private_' . strtolower( $args['plural'] ),
+					$args['capabilities'] = array(
 
-					// Primitive capabilities used within map_meta_cap():
-					'delete_posts'           => 'delete_' . strtolower( $args['plural'] ),
-					'delete_private_posts'   => 'delete_private_' . strtolower( $args['plural'] ),
-					'delete_published_posts' => 'delete_published_' . strtolower( $args['plural'] ),
-					'delete_others_posts'    => 'delete_others_' . strtolower( $args['plural'] ),
-					'edit_private_posts'     => 'edit_private_' . strtolower( $args['plural'] ),
-					'edit_published_posts'   => 'edit_published_' . strtolower( $args['plural'] ),
-					'create_posts'           => 'edit_' . strtolower( $args['plural'] )
+						// Meta capabilities
+						'edit_post'              => 'edit_' . strtolower( $args['singular'] ),
+						'read_post'              => 'read_' . strtolower( $args['singular'] ),
+						'delete_post'            => 'delete_' . strtolower( $args['singular'] ),
 
-				);
+						// Primitive capabilities used outside of map_meta_cap():
+						'edit_posts'             => 'edit_' . strtolower( $args['plural'] ),
+						'edit_others_posts'      => 'edit_others_' . strtolower( $args['plural'] ),
+						'publish_posts'          => 'publish_' . strtolower( $args['plural'] ),
+						'read_private_posts'     => 'read_private_' . strtolower( $args['plural'] ),
+
+						// Primitive capabilities used within map_meta_cap():
+						'delete_posts'           => 'delete_' . strtolower( $args['plural'] ),
+						'delete_private_posts'   => 'delete_private_' . strtolower( $args['plural'] ),
+						'delete_published_posts' => 'delete_published_' . strtolower( $args['plural'] ),
+						'delete_others_posts'    => 'delete_others_' . strtolower( $args['plural'] ),
+						'edit_private_posts'     => 'edit_private_' . strtolower( $args['plural'] ),
+						'edit_published_posts'   => 'edit_published_' . strtolower( $args['plural'] ),
+						'create_posts'           => 'create_' . strtolower( $args['plural'] )
+					);
+				}
+
+
+//				var_export( $args); die();
 
 				/**
 				 * Adding map_meta_cap will map the meta correctly.
