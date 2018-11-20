@@ -40,6 +40,8 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 		 * @var array
 		 */
 		protected $arg_overrides = array();
+
+
 		/**
 		 * All CPT registration arguments
 		 * @var array
@@ -53,6 +55,9 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 		public $cpt_to_register = array();
 
+
+		public $cpt_config = array();
+
 		/**
 		 * An array of each CPT_Core object registered with this class
 		 * @var array
@@ -62,7 +67,7 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 		 * Whether text-domain has been registered
 		 * @var boolean
 		 */
-		protected static $l10n_done = false;
+//		protected static $l10n_done = false;
 
 		/**
 		 * Constructor. Builds our CPT.
@@ -99,24 +104,34 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 			if ( is_array( $config ) ) {
 
-//				if ( ! $this->is_assoc( $config ) ) {
-//					wp_die( __( 'array key missing for custom post type configuration array', $this->text_domain ) );
-//				}
+
+//				var_dump_die( $config );
 
 				foreach ( $config as $cpt => $args ) {
-//
-//
-//					var_dump_die( $args);
+
+					if ( ! is_array( $args ) ) {
+						wp_die( __( 'Use cpt to register as key of configuration array', $this->text_domain ) );
+					}
 
 					$this->add_cpt_single( $cpt, $args );
 				}
 
 			}
 
-			// load text domain
-			add_action( 'plugins_loaded', array( $this, 'l10n' ), 5 );
+			// Done
 			add_action( 'init', array( $this, 'register_post_type' ) );
+			add_filter( 'bulk_post_updated_messages', array( $this, 'bulk_messages' ), 10, 2 );
+			add_filter( 'post_updated_messages', array( $this, 'messages' ) );
 
+
+
+			
+			// Different column registration for pages/posts
+			$h = isset( $args['hierarchical'] ) && $args['hierarchical'] ? 'pages' : 'posts';
+
+			add_action( "manage_{$h}_custom_column", array( $this, 'columns_display' ), 10, 2 );
+
+			add_filter( 'enter_title_here', array( $this, 'title' ) );
 
 		}
 
@@ -134,30 +149,13 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 //			$args = wp_parse_args( $args, $this->normalize_cpt_args( $cpt, $args ) );
 			$args = $this->normalize_cpt_args( $cpt, $args );
 
-			$this->cpt_to_register[ $cpt ] = $args;
+			$this->cpt_config[ $cpt ] = $args;
 
 
-//			var_dump_die( $args);
+			add_filter( 'manage_edit-' . $cpt . '_columns', array( $this, 'columns' ) );
+			add_filter( 'manage_edit-' . $cpt . '_sortable_columns', array( $this, 'sortable_columns' ) );
 
-			$this->singular  = $args['singular'];
-			$this->plural    = ! isset( $args['plural'] ) || ! is_string( $args['plural'] ) ? $args['singular'] . 's' : $args['plural'];
-			$this->post_type = $cpt;
-
-//			$this->post_type = ! isset( $args['slug'] ) || ! is_string( $args['slug'] ) ? sanitize_title( $this->plural ) : $args['slug'];
-
-
-//			$this->cpt_args = (array) $args;
-
-//			add_filter( 'post_updated_messages', array( $this, 'messages' ) );
-//			add_filter( 'bulk_post_updated_messages', array( $this, 'bulk_messages' ), 10, 2 );
-//			add_filter( 'manage_edit-' . $this->post_type . '_columns', array( $this, 'columns' ) );
-//			add_filter( 'manage_edit-' . $this->post_type . '_sortable_columns', array( $this, 'sortable_columns' ) );
-//			// Different column registration for pages/posts
-//			$h = isset( $arg_overrides['hierarchical'] ) && $args['hierarchical'] ? 'pages' : 'posts';
-//			add_action( "manage_{$h}_custom_column", array( $this, 'columns_display' ), 10, 2 );
-//			add_filter( 'enter_title_here', array( $this, 'title' ) );
 		}
-
 
 		public function normalize_cpt_name( $cpt_name ) {
 			return strtolower( str_replace( ' ', '_', $cpt_name ) );
@@ -232,37 +230,36 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 			return $args;
 		}
 
-
-		public function get_cpt_labels_array( $fields ) {
+		public function get_cpt_labels_array( $args ) {
 			/**
 			 * Labels used when displaying the posts in the admin and sometimes on the front end.  These
 			 * labels do not cover post updated, error, and related messages.  You'll need to filter the
 			 * 'post_updated_messages' hook to customize those.
 			 */
 			$labels = array(
-				'name'                  => $fields['plural'],
-				'singular_name'         => $fields['singular'],
-				'menu_name'             => $fields['menu_name'],
-				'new_item'              => sprintf( __( 'New %s', 'plugin-name' ), $fields['singular'] ),
-				'add_new_item'          => sprintf( __( 'Add new %s', 'plugin-name' ), $fields['singular'] ),
-				'edit_item'             => sprintf( __( 'Edit %s', 'plugin-name' ), $fields['singular'] ),
-				'view_item'             => sprintf( __( 'View %s', 'plugin-name' ), $fields['singular'] ),
-				'view_items'            => sprintf( __( 'View %s', 'plugin-name' ), $fields['plural'] ),
-				'search_items'          => sprintf( __( 'Search %s', 'plugin-name' ), $fields['plural'] ),
-				'not_found'             => sprintf( __( 'No %s found', 'plugin-name' ), strtolower( $fields['plural'] ) ),
-				'not_found_in_trash'    => sprintf( __( 'No %s found in trash', 'plugin-name' ), strtolower( $fields['plural'] ) ),
-				'all_items'             => sprintf( __( 'All %s', 'plugin-name' ), $fields['plural'] ),
-				'archives'              => sprintf( __( '%s Archives', 'plugin-name' ), $fields['singular'] ),
-				'attributes'            => sprintf( __( '%s Attributes', 'plugin-name' ), $fields['singular'] ),
-				'insert_into_item'      => sprintf( __( 'Insert into %s', 'plugin-name' ), strtolower( $fields['singular'] ) ),
-				'uploaded_to_this_item' => sprintf( __( 'Uploaded to this %s', 'plugin-name' ), strtolower( $fields['singular'] ) ),
+				'name'                  => $args['plural'],
+				'singular_name'         => $args['singular'],
+				'menu_name'             => $args['menu_name'],
+				'new_item'              => sprintf( __( 'New %s', $this->text_domain ), $args['singular'] ),
+				'add_new_item'          => sprintf( __( 'Add new %s', $this->text_domain ), $args['singular'] ),
+				'edit_item'             => sprintf( __( 'Edit %s', $this->text_domain ), $args['singular'] ),
+				'view_item'             => sprintf( __( 'View %s', $this->text_domain ), $args['singular'] ),
+				'view_items'            => sprintf( __( 'View %s', $this->text_domain ), $args['plural'] ),
+				'search_items'          => sprintf( __( 'Search %s', $this->text_domain ), $args['plural'] ),
+				'not_found'             => sprintf( __( 'No %s found', $this->text_domain ), strtolower( $args['plural'] ) ),
+				'not_found_in_trash'    => sprintf( __( 'No %s found in trash', $this->text_domain ), strtolower( $args['plural'] ) ),
+				'all_items'             => sprintf( __( 'All %s', $this->text_domain ), $args['plural'] ),
+				'archives'              => sprintf( __( '%s Archives', $this->text_domain ), $args['singular'] ),
+				'attributes'            => sprintf( __( '%s Attributes', $this->text_domain ), $args['singular'] ),
+				'insert_into_item'      => sprintf( __( 'Insert into %s', $this->text_domain ), strtolower( $args['singular'] ) ),
+				'uploaded_to_this_item' => sprintf( __( 'Uploaded to this %s', $this->text_domain ), strtolower( $args['singular'] ) ),
 
 				/* Labels for hierarchical post types only. */
-				'parent_item'           => sprintf( __( 'Parent %s', 'plugin-name' ), $fields['singular'] ),
-				'parent_item_colon'     => sprintf( __( 'Parent %s:', 'plugin-name' ), $fields['singular'] ),
+				'parent_item'           => sprintf( __( 'Parent %s', $this->text_domain ), $args['singular'] ),
+				'parent_item_colon'     => sprintf( __( 'Parent %s:', $this->text_domain ), $args['singular'] ),
 
 				/* Custom archive label.  Must filter 'post_type_archive_title' to use. */
-				'archive_title'         => $fields['plural'],
+				'archive_title'         => $args['plural'],
 			);
 
 			return $labels;
@@ -341,14 +338,12 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 		 */
 		public function register_post_type() {
 
+			if ( empty( $this->cpt_config || ! is_array( $this->cpt_config ) ) ) {
+				return null;
+			}
 
-			foreach ( $this->cpt_to_register as $cpt => $args ) {
+			foreach ( $this->cpt_config as $cpt => $args ) {
 
-//			var_dump_die( $args);
-
-//				register_post_type( $cpt, $this->get_args() );
-
-//				var_dump_die( $this->get_args() );
 				// Register our CPT
 				$args = register_post_type( $cpt, $args );
 				// If error, yell about it.
@@ -357,11 +352,6 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 				}
 			}
 
-
-			// Success. Set args to what WP returns
-//			$this->cpt_args = $args;
-			// Add this post type to our custom_post_types array
-//			self::$custom_post_types[ $this->post_type ] = $this;
 		}
 
 		/**
@@ -373,32 +363,45 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 		 * @return array            Modified messages array
 		 */
 		public function messages( $messages ) {
-			global $post, $post_ID;
-			$cpt_messages = array(
-				0 => '', // Unused. Messages start at index 1.
-				2 => __( 'Custom field updated.' ),
-				3 => __( 'Custom field deleted.' ),
-				4 => sprintf( __( '%1$s updated.', 'cpt-core' ), $this->singular ),
-				/* translators: %s: date and time of the revision */
-				5 => isset( $_GET['revision'] ) ? sprintf( __( '%1$s restored to revision from %2$s', 'cpt-core' ), $this->singular, wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
-				7 => sprintf( __( '%1$s saved.', 'cpt-core' ), $this->singular ),
-			);
-			if ( $this->get_arg( 'public' ) ) {
-				$cpt_messages[1] = sprintf( __( '%1$s updated. <a href="%2$s">View %1$s</a>', 'cpt-core' ), $this->singular, esc_url( get_permalink( $post_ID ) ) );
-				$cpt_messages[6] = sprintf( __( '%1$s published. <a href="%2$s">View %1$s</a>', 'cpt-core' ), $this->singular, esc_url( get_permalink( $post_ID ) ) );
-				$cpt_messages[8] = sprintf( __( '%1$s submitted. <a target="_blank" href="%2$s">Preview %1$s</a>', 'cpt-core' ), $this->singular, esc_url( add_query_arg( 'preview', 'true', get_permalink( $post_ID ) ) ) );
-				// translators: Publish box date format, see http://php.net/date
-				$cpt_messages[9]  = sprintf( __( '%1$s scheduled for: <strong>%2$s</strong>. <a target="_blank" href="%3$s">Preview %1$s</a>', 'cpt-core' ), $this->singular, date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ), esc_url( get_permalink( $post_ID ) ) );
-				$cpt_messages[10] = sprintf( __( '%1$s draft updated. <a target="_blank" href="%2$s">Preview %1$s</a>', 'cpt-core' ), $this->singular, esc_url( add_query_arg( 'preview', 'true', get_permalink( $post_ID ) ) ) );
-			} else {
-				$cpt_messages[1] = sprintf( __( '%1$s updated.', 'cpt-core' ), $this->singular );
-				$cpt_messages[6] = sprintf( __( '%1$s published.', 'cpt-core' ), $this->singular );
-				$cpt_messages[8] = sprintf( __( '%1$s submitted.', 'cpt-core' ), $this->singular );
-				// translators: Publish box date format, see http://php.net/date
-				$cpt_messages[9]  = sprintf( __( '%1$s scheduled for: <strong>%2$s</strong>.', 'cpt-core' ), $this->singular, date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ) );
-				$cpt_messages[10] = sprintf( __( '%1$s draft updated.', 'cpt-core' ), $this->singular );
+
+			if ( empty( $this->cpt_config ) || ! is_array( $this->cpt_config ) ) {
+				return $messages;
 			}
-			$messages[ $this->post_type ] = $cpt_messages;
+
+			$post             = get_post();
+			$post_type        = get_post_type( $post );
+			$post_type_object = get_post_type_object( $post_type );
+
+			foreach ( $this->cpt_config as $cpt => $args ):
+
+				$cpt_messages = array(
+					0 => '', // Unused. Messages start at index 1.
+					2 => __( 'Custom field updated.' ),
+					3 => __( 'Custom field deleted.' ),
+					4 => sprintf( __( '%1$s updated.', $this->text_domain ), $args['singular'] ),
+					/* translators: %s: date and time of the revision */
+					5 => isset( $_GET['revision'] ) ? sprintf( __( '%1$s restored to revision from %2$s', $this->text_domain ), $args['singular'], wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
+					7 => sprintf( __( '%1$s saved.', $this->text_domain ), $args['singular'] ),
+				);
+				if ( $post_type_object->publicly_queryable && $cpt === $post_type ) {
+					$cpt_messages[1] = sprintf( __( '%1$s updated. <a href="%2$s">View %1$s</a>', $this->text_domain ), $args['singular'], esc_url( get_permalink( $post->ID ) ) );
+					$cpt_messages[6] = sprintf( __( '%1$s published. <a href="%2$s">View %1$s</a>', $this->text_domain ), $args['singular'], esc_url( get_permalink( $post->ID ) ) );
+					$cpt_messages[8] = sprintf( __( '%1$s submitted. <a target="_blank" href="%2$s">Preview %1$s</a>', $this->text_domain ), $args['singular'], esc_url( add_query_arg( 'preview', 'true', get_permalink( $post->ID ) ) ) );
+					// translators: Publish box date format, see http://php.net/date
+					$cpt_messages[9]  = sprintf( __( '%1$s scheduled for: <strong>%2$s</strong>. <a target="_blank" href="%3$s">Preview %1$s</a>', $this->text_domain ), $args['singular'], date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ), esc_url( get_permalink( $post->ID ) ) );
+					$cpt_messages[10] = sprintf( __( '%1$s draft updated. <a target="_blank" href="%2$s">Preview %1$s</a>', $this->text_domain ), $args['singular'], esc_url( add_query_arg( 'preview', 'true', get_permalink( $post->ID ) ) ) );
+				} else {
+					$cpt_messages[1] = sprintf( __( '%1$s updated.', $this->text_domain ), $args['singular'] );
+					$cpt_messages[6] = sprintf( __( '%1$s published.', $this->text_domain ), $args['singular'] );
+					$cpt_messages[8] = sprintf( __( '%1$s submitted.', $this->text_domain ), $args['singular'] );
+					// translators: Publish box date format, see http://php.net/date
+					$cpt_messages[9]  = sprintf( __( '%1$s scheduled for: <strong>%2$s</strong>.', $this->text_domain ), $args['singular'], date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ) );
+					$cpt_messages[10] = sprintf( __( '%1$s draft updated.', $this->text_domain ), $args['singular'] );
+				}
+				$messages[ $cpt ] = $cpt_messages;
+
+			endforeach;
+
 
 			return $messages;
 		}
@@ -413,13 +416,16 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 		 * @return array                  Modified array of messages
 		 */
 		function bulk_messages( $bulk_messages, $bulk_counts ) {
-			$bulk_messages[ $this->post_type ] = array(
-				'updated'   => sprintf( _n( '%1$s %2$s updated.', '%1$s %3$s updated.', $bulk_counts['updated'], 'cpt-core' ), $bulk_counts['updated'], $this->singular, $this->plural ),
-				'locked'    => sprintf( _n( '%1$s %2$s not updated, somebody is editing it.', '%1$s %3$s not updated, somebody is editing them.', $bulk_counts['locked'], 'cpt-core' ), $bulk_counts['locked'], $this->singular, $this->plural ),
-				'deleted'   => sprintf( _n( '%1$s %2$s permanently deleted.', '%1$s %3$s permanently deleted.', $bulk_counts['deleted'], 'cpt-core' ), $bulk_counts['deleted'], $this->singular, $this->plural ),
-				'trashed'   => sprintf( _n( '%1$s %2$s moved to the Trash.', '%1$s %3$s moved to the Trash.', $bulk_counts['trashed'], 'cpt-core' ), $bulk_counts['trashed'], $this->singular, $this->plural ),
-				'untrashed' => sprintf( _n( '%1$s %2$s restored from the Trash.', '%1$s %3$s restored from the Trash.', $bulk_counts['untrashed'], 'cpt-core' ), $bulk_counts['untrashed'], $this->singular, $this->plural ),
-			);
+
+			foreach ( $this->cpt_config as $post_type => $args ) {
+				$bulk_messages[ $post_type ] = array(
+					'updated'   => sprintf( _n( '%1$s %2$s updated.', '%1$s %3$s updated.', $bulk_counts['updated'], $this->text_domain ), $bulk_counts['updated'], $args['singular'], $args['plural'] ),
+					'locked'    => sprintf( _n( '%1$s %2$s not updated, somebody is editing it.', '%1$s %3$s not updated, somebody is editing them.', $bulk_counts['locked'], $this->text_domain ), $bulk_counts['locked'], $args['singular'], $args['plural'] ),
+					'deleted'   => sprintf( _n( '%1$s %2$s permanently deleted.', '%1$s %3$s permanently deleted.', $bulk_counts['deleted'], $this->text_domain ), $bulk_counts['deleted'], $args['singular'], $args['plural'] ),
+					'trashed'   => sprintf( _n( '%1$s %2$s moved to the Trash.', '%1$s %3$s moved to the Trash.', $bulk_counts['trashed'], $this->text_domain ), $bulk_counts['trashed'], $args['singular'], $args['plural'] ),
+					'untrashed' => sprintf( _n( '%1$s %2$s restored from the Trash.', '%1$s %3$s restored from the Trash.', $bulk_counts['untrashed'], $this->text_domain ), $bulk_counts['untrashed'], $args['singular'], $args['plural'] ),
+				);
+			}
 
 			return $bulk_messages;
 		}
