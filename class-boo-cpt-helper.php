@@ -124,8 +124,6 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 			add_filter( 'post_updated_messages', array( $this, 'messages' ) );
 
 
-
-			
 			// Different column registration for pages/posts
 			$h = isset( $args['hierarchical'] ) && $args['hierarchical'] ? 'pages' : 'posts';
 
@@ -134,6 +132,7 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 			add_filter( 'enter_title_here', array( $this, 'title' ) );
 
 		}
+
 
 		public function set_properties( $options_override ) {
 
@@ -154,6 +153,7 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 			add_filter( 'manage_edit-' . $cpt . '_columns', array( $this, 'columns' ) );
 			add_filter( 'manage_edit-' . $cpt . '_sortable_columns', array( $this, 'sortable_columns' ) );
+
 
 		}
 
@@ -266,71 +266,71 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 		}
 
-		/**
-		 * Gets the requested CPT argument
-		 *
-		 * @param string $arg
-		 *
-		 * @since  0.2.1
-		 * @return array|false  CPT argument
-		 */
-		public function get_arg( $arg ) {
-			$args = $this->get_args();
-			if ( isset( $args->{$arg} ) ) {
-				return $args->{$arg};
-			}
-			if ( is_array( $args ) && isset( $args[ $arg ] ) ) {
-				return $args[ $arg ];
-			}
+//		/**
+//		 * Gets the requested CPT argument
+//		 *
+//		 * @param string $arg
+//		 *
+//		 * @since  0.2.1
+//		 * @return array|false  CPT argument
+//		 */
+//		public function get_arg( $arg ) {
+//			$args = $this->get_args();
+//			if ( isset( $args->{$arg} ) ) {
+//				return $args->{$arg};
+//			}
+//			if ( is_array( $args ) && isset( $args[ $arg ] ) ) {
+//				return $args[ $arg ];
+//			}
+//
+//			return false;
+//		}
 
-			return false;
-		}
-
-		/**
-		 * Gets the passed in arguments combined with our defaults.
-		 * @since  0.2.0
-		 * @return array  CPT arguments array
-		 */
-		public function get_args() {
-			if ( ! empty( $this->cpt_args ) ) {
-				return $this->cpt_args;
-			}
-			// Generate CPT labels
-			$labels = array(
-				'name'                  => $this->plural,
-				'singular_name'         => $this->singular,
-				'add_new'               => sprintf( __( 'Add New %s', 'cpt-core' ), $this->singular ),
-				'add_new_item'          => sprintf( __( 'Add New %s', 'cpt-core' ), $this->singular ),
-				'edit_item'             => sprintf( __( 'Edit %s', 'cpt-core' ), $this->singular ),
-				'new_item'              => sprintf( __( 'New %s', 'cpt-core' ), $this->singular ),
-				'all_items'             => sprintf( __( 'All %s', 'cpt-core' ), $this->plural ),
-				'view_item'             => sprintf( __( 'View %s', 'cpt-core' ), $this->singular ),
-				'search_items'          => sprintf( __( 'Search %s', 'cpt-core' ), $this->plural ),
-				'not_found'             => sprintf( __( 'No %s', 'cpt-core' ), $this->plural ),
-				'not_found_in_trash'    => sprintf( __( 'No %s found in Trash', 'cpt-core' ), $this->plural ),
-				'parent_item_colon'     => isset( $this->arg_overrides['hierarchical'] ) && $this->arg_overrides['hierarchical'] ? sprintf( __( 'Parent %s:', 'cpt-core' ), $this->singular ) : null,
-				'menu_name'             => $this->plural,
-				'insert_into_item'      => sprintf( __( 'Insert into %s', 'cpt-core' ), strtolower( $this->singular ) ),
-				'uploaded_to_this_item' => sprintf( __( 'Uploaded to this %s', 'cpt-core' ), strtolower( $this->singular ) ),
-				'items_list'            => sprintf( __( '%s list', 'cpt-core' ), $this->plural ),
-				'items_list_navigation' => sprintf( __( '%s list navigation', 'cpt-core' ), $this->plural ),
-				'filter_items_list'     => sprintf( __( 'Filter %s list', 'cpt-core' ), strtolower( $this->plural ) )
-			);
-			// Set default CPT parameters
-			$defaults                 = array(
-				'labels'             => array(),
-				'public'             => true,
-				'publicly_queryable' => true,
-				'show_ui'            => true,
-				'show_in_menu'       => true,
-				'has_archive'        => true,
-				'supports'           => array( 'title', 'editor', 'excerpt' ),
-			);
-			$this->cpt_args           = wp_parse_args( $this->arg_overrides, $defaults );
-			$this->cpt_args['labels'] = wp_parse_args( $this->cpt_args['labels'], $labels );
-
-			return $this->cpt_args;
-		}
+//		/**
+//		 * Gets the passed in arguments combined with our defaults.
+//		 * @since  0.2.0
+//		 * @return array  CPT arguments array
+//		 */
+//		public function get_args() {
+//			if ( ! empty( $this->cpt_args ) ) {
+//				return $this->cpt_args;
+//			}
+//			// Generate CPT labels
+//			$labels = array(
+//				'name'                  => $this->plural,
+//				'singular_name'         => $this->singular,
+//				'add_new'               => sprintf( __( 'Add New %s', 'cpt-core' ), $this->singular ),
+//				'add_new_item'          => sprintf( __( 'Add New %s', 'cpt-core' ), $this->singular ),
+//				'edit_item'             => sprintf( __( 'Edit %s', 'cpt-core' ), $this->singular ),
+//				'new_item'              => sprintf( __( 'New %s', 'cpt-core' ), $this->singular ),
+//				'all_items'             => sprintf( __( 'All %s', 'cpt-core' ), $this->plural ),
+//				'view_item'             => sprintf( __( 'View %s', 'cpt-core' ), $this->singular ),
+//				'search_items'          => sprintf( __( 'Search %s', 'cpt-core' ), $this->plural ),
+//				'not_found'             => sprintf( __( 'No %s', 'cpt-core' ), $this->plural ),
+//				'not_found_in_trash'    => sprintf( __( 'No %s found in Trash', 'cpt-core' ), $this->plural ),
+//				'parent_item_colon'     => isset( $this->arg_overrides['hierarchical'] ) && $this->arg_overrides['hierarchical'] ? sprintf( __( 'Parent %s:', 'cpt-core' ), $this->singular ) : null,
+//				'menu_name'             => $this->plural,
+//				'insert_into_item'      => sprintf( __( 'Insert into %s', 'cpt-core' ), strtolower( $this->singular ) ),
+//				'uploaded_to_this_item' => sprintf( __( 'Uploaded to this %s', 'cpt-core' ), strtolower( $this->singular ) ),
+//				'items_list'            => sprintf( __( '%s list', 'cpt-core' ), $this->plural ),
+//				'items_list_navigation' => sprintf( __( '%s list navigation', 'cpt-core' ), $this->plural ),
+//				'filter_items_list'     => sprintf( __( 'Filter %s list', 'cpt-core' ), strtolower( $this->plural ) )
+//			);
+//			// Set default CPT parameters
+//			$defaults                 = array(
+//				'labels'             => array(),
+//				'public'             => true,
+//				'publicly_queryable' => true,
+//				'show_ui'            => true,
+//				'show_in_menu'       => true,
+//				'has_archive'        => true,
+//				'supports'           => array( 'title', 'editor', 'excerpt' ),
+//			);
+//			$this->cpt_args           = wp_parse_args( $this->arg_overrides, $defaults );
+//			$this->cpt_args['labels'] = wp_parse_args( $this->cpt_args['labels'], $labels );
+//
+//			return $this->cpt_args;
+//		}
 
 		/**
 		 * Actually registers our CPT with the merged arguments
@@ -345,12 +345,99 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 			foreach ( $this->cpt_config as $cpt => $args ) {
 
 				// Register our CPT
-				$args = register_post_type( $cpt, $args );
+				$response = register_post_type( $cpt, $args );
 				// If error, yell about it.
-				if ( is_wp_error( $args ) ) {
-					wp_die( $args->get_error_message() );
+				if ( is_wp_error( $response ) ) {
+					wp_die( $response->get_error_message() );
 				}
+
+				/**
+				 * Register Taxnonmies if any
+				 * @link https://codex.wordpress.org/Function_Reference/register_taxonomy
+				 */
+				if ( isset( $args['taxonomy'] ) && is_array( $args['taxonomy'] ) ) {
+
+					foreach ( $args['taxonomy'] as $taxonomy_id => $tax_args ) {
+
+						if ( ! is_int( $taxonomy_id ) ) {
+							// its assoc array
+							$this->register_single_post_type_taxonomy( $taxonomy_id, $tax_args, $cpt );
+						} else {
+							$this->register_single_post_type_taxonomy( $tax_args, array(), $cpt );
+						}
+
+					}
+
+				}
+
+
 			}
+
+		}
+
+
+		private function get_human_readable_from_id( $id ) {
+			$id = str_replace( '_', ' ', $id );
+			$id = str_replace( '-', ' ', $id );
+
+			return ucwords( $id );
+		}
+
+		private function register_single_post_type_taxonomy( $taxonomy_id, $tax_args = array(), $cpt = 'post' ) {
+
+
+			$single_name       = isset( $tax_args['singular_name'] ) ? $tax_args['singular_name'] : $this->get_human_readable_from_id( $taxonomy_id );
+			$name              = isset( $tax_args['name'] ) ? $tax_args['name'] : $this->get_human_readable_from_id( $taxonomy_id ) . 's';
+			$post_types        = isset( $tax_args['post_types'] ) ? $tax_args['post_types'] : (array) $cpt;
+			$labels_configured = isset( $tax_args['labels'] ) ? $tax_args['labels'] : array();
+
+
+			$labels = array(
+				'name'                       => $name,
+				'singular_name'              => $single_name,
+				'menu_name'                  => $name,
+				'all_items'                  => sprintf( __( 'All %s', $this->text_domain ), $name ),
+				'edit_item'                  => sprintf( __( 'Edit %s', $this->text_domain ), $single_name ),
+				'view_item'                  => sprintf( __( 'View %s', $this->text_domain ), $single_name ),
+				'update_item'                => sprintf( __( 'Update %s', $this->text_domain ), $single_name ),
+				'add_new_item'               => sprintf( __( 'Add New %s', $this->text_domain ), $single_name ),
+				'new_item_name'              => sprintf( __( 'New %s Name', $this->text_domain ), $single_name ),
+				'parent_item'                => sprintf( __( 'Parent %s', $this->text_domain ), $single_name ),
+				'parent_item_colon'          => sprintf( __( 'Parent %s:', $this->text_domain ), $single_name ),
+				'search_items'               => sprintf( __( 'Search %s', $this->text_domain ), $name ),
+				'popular_items'              => sprintf( __( 'Popular %s', $this->text_domain ), $name ),
+				'separate_items_with_commas' => sprintf( __( 'Separate %s with commas', $this->text_domain ), $name ),
+				'add_or_remove_items'        => sprintf( __( 'Add or remove %s', $this->text_domain ), $name ),
+				'choose_from_most_used'      => sprintf( __( 'Choose from the most used %s', $this->text_domain ), $name ),
+				'not_found'                  => sprintf( __( 'No %s found', $this->text_domain ), $name ),
+			);
+
+
+//			var_dump_die( wp_parse_args( $labels_configures,  $labels  ));
+
+			$args = array(
+				'label'                 => $name,
+				'labels'                => wp_parse_args( $labels_configured, $labels ),
+				'hierarchical'          => ( isset( $tax_args['hierarchical'] ) ) ? $tax_args['hierarchical'] : true,
+				'public'                => ( isset( $tax_args['public'] ) ) ? $tax_args['public'] : true,
+				'show_ui'               => ( isset( $tax_args['show_ui'] ) ) ? $tax_args['show_ui'] : true,
+				'show_in_nav_menus'     => ( isset( $tax_args['show_in_nav_menus'] ) ) ? $tax_args['show_in_nav_menus'] : true,
+				'show_tagcloud'         => ( isset( $tax_args['show_tagcloud'] ) ) ? $tax_args['show_tagcloud'] : true,
+				'meta_box_cb'           => ( isset( $tax_args['meta_box_cb'] ) ) ? $tax_args['meta_box_cb'] : null,
+				'show_admin_column'     => ( isset( $tax_args['show_admin_column'] ) ) ? $tax_args['show_admin_column'] : true,
+				'show_in_quick_edit'    => ( isset( $tax_args['show_in_quick_edit'] ) ) ? $tax_args['show_in_quick_edit'] : true,
+				'update_count_callback' => ( isset( $tax_args['update_count_callback'] ) ) ? $tax_args['update_count_callback'] : '',
+				'show_in_rest'          => ( isset( $tax_args['show_in_rest'] ) ) ? $tax_args['show_in_rest'] : true,
+				'rest_base'             => $taxonomy_id,
+				'rest_controller_class' => ( isset( $tax_args['rest_controller_class'] ) ) ? $tax_args['rest_controller_class'] : 'WP_REST_Terms_Controller',
+				'query_var'             => $taxonomy_id,
+				'rewrite'               => ( isset( $tax_args['rewrite'] ) ) ? $tax_args['rewrite'] : true,
+				'sort'                  => ( isset( $tax_args['sort'] ) ) ? $tax_args['sort'] : '',
+			);
+
+			register_taxonomy( $taxonomy_id, $post_types, $args );
+
+			unset( $taxonomy_id, $post_types, $args, $single_name, $name, $labels, $labels_configured );
 
 		}
 
@@ -486,60 +573,60 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 			return $title;
 		}
 
-		/**
-		 * Provides access to protected class properties.
-		 * @since  0.2.0
-		 *
-		 * @param  string $key Specific CPT parameter to return
-		 *
-		 * @return mixed       Specific CPT parameter or array of singular, plural and registered name
-		 */
-		public function post_type( $key = 'post_type' ) {
-			return isset( $this->$key ) ? $this->$key : array(
-				'singular'  => $this->singular,
-				'plural'    => $this->plural,
-				'post_type' => $this->post_type,
-			);
-		}
+//		/**
+//		 * Provides access to protected class properties.
+//		 * @since  0.2.0
+//		 *
+//		 * @param  string $key Specific CPT parameter to return
+//		 *
+//		 * @return mixed       Specific CPT parameter or array of singular, plural and registered name
+//		 */
+//		public function post_type( $key = 'post_type' ) {
+//			return isset( $this->$key ) ? $this->$key : array(
+//				'singular'  => $this->singular,
+//				'plural'    => $this->plural,
+//				'post_type' => $this->post_type,
+//			);
+//		}
 
-		/**
-		 * Provides access to all CPT_Core taxonomy objects registered via this class.
-		 * @since  0.1.0
-		 *
-		 * @param  string $post_type Specific CPT_Core object to return, or 'true' to specify only names.
-		 *
-		 * @return mixed             Specific CPT_Core object or array of all
-		 */
-		public static function post_types( $post_type = '' ) {
-			if ( true === $post_type && ! empty( self::$custom_post_types ) ) {
-				return array_keys( self::$custom_post_types );
-			}
+//		/**
+//		 * Provides access to all CPT_Core taxonomy objects registered via this class.
+//		 * @since  0.1.0
+//		 *
+//		 * @param  string $post_type Specific CPT_Core object to return, or 'true' to specify only names.
+//		 *
+//		 * @return mixed             Specific CPT_Core object or array of all
+//		 */
+//		public static function post_types( $post_type = '' ) {
+//			if ( true === $post_type && ! empty( self::$custom_post_types ) ) {
+//				return array_keys( self::$custom_post_types );
+//			}
+//
+//			return isset( self::$custom_post_types[ $post_type ] ) ? self::$custom_post_types[ $post_type ] : self::$custom_post_types;
+//		}
 
-			return isset( self::$custom_post_types[ $post_type ] ) ? self::$custom_post_types[ $post_type ] : self::$custom_post_types;
-		}
+//		/**
+//		 * Magic method that echos the CPT registered name when treated like a string
+//		 * @since  0.2.0
+//		 * @return string CPT registered name
+//		 */
+//		public function __toString() {
+//			return $this->post_type();
+//		}
 
-		/**
-		 * Magic method that echos the CPT registered name when treated like a string
-		 * @since  0.2.0
-		 * @return string CPT registered name
-		 */
-		public function __toString() {
-			return $this->post_type();
-		}
-
-		/**
-		 * Load this library's text domain
-		 * @since  0.2.1
-		 */
-		public function l10n() {
-			// Only do this one time
-			if ( self::$l10n_done ) {
-				return;
-			}
-			$locale = apply_filters( 'plugin_locale', get_locale(), 'cpt-core' );
-			$mofile = dirname( __FILE__ ) . '/languages/cpt-core-' . $locale . '.mo';
-			load_textdomain( 'cpt-core', $mofile );
-		}
+//		/**
+//		 * Load this library's text domain
+//		 * @since  0.2.1
+//		 */
+//		public function l10n() {
+//			// Only do this one time
+//			if ( self::$l10n_done ) {
+//				return;
+//			}
+//			$locale = apply_filters( 'plugin_locale', get_locale(), 'cpt-core' );
+//			$mofile = dirname( __FILE__ ) . '/languages/cpt-core-' . $locale . '.mo';
+//			load_textdomain( 'cpt-core', $mofile );
+//		}
 
 	} // end class
 
