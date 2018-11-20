@@ -131,6 +131,9 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 			add_filter( 'enter_title_here', array( $this, 'title' ) );
 
+
+			add_action( 'init', array( $this, 'assign_capabilities' ) );
+
 		}
 
 
@@ -143,19 +146,152 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 		public function add_cpt_single( $cpt, $args = array() ) {
 
+
 			$cpt = $this->normalize_cpt_name( $cpt );
 
 //			$args = wp_parse_args( $args, $this->normalize_cpt_args( $cpt, $args ) );
 			$args = $this->normalize_cpt_args( $cpt, $args );
 
-			$this->cpt_config[ $cpt ] = $args;
+			$args = $this->setup_capabilities( $args );
 
+
+//			var_dump_die( $args );
+
+
+			$this->cpt_config[ $cpt ] = $args;
 
 			add_filter( 'manage_edit-' . $cpt . '_columns', array( $this, 'columns' ) );
 			add_filter( 'manage_edit-' . $cpt . '_sortable_columns', array( $this, 'sortable_columns' ) );
 
+		}
+
+		public function setup_capabilities( $args ) {
+
+
+			if ( isset( $args['custom_caps'] ) && $args['custom_caps'] ) {
+
+				/**
+				 * Provides more precise control over the capabilities than the defaults.  By default, WordPress
+				 * will use the 'capability_type' argument to build these capabilities.  More often than not,
+				 * this results in many extra capabilities that you probably don't need.  The following is how
+				 * I set up capabilities for many post types, which only uses three basic capabilities you need
+				 * to assign to roles: 'manage_examples', 'edit_examples', 'create_examples'.  Each post type
+				 * is unique though, so you'll want to adjust it to fit your needs.
+				 *
+				 * @link https://gist.github.com/creativembers/6577149
+				 * @link http://justintadlock.com/archives/2010/07/10/meta-capabilities-for-custom-post-types
+				 */
+				$args['capabilities'] = array(
+
+					// Meta capabilities
+					'edit_post'              => 'edit_' . strtolower( $args['singular'] ),
+					'read_post'              => 'read_' . strtolower( $args['singular'] ),
+					'delete_post'            => 'delete_' . strtolower( $args['singular'] ),
+
+					// Primitive capabilities used outside of map_meta_cap():
+					'edit_posts'             => 'edit_' . strtolower( $args['plural'] ),
+					'edit_others_posts'      => 'edit_others_' . strtolower( $args['plural'] ),
+					'publish_posts'          => 'publish_' . strtolower( $args['plural'] ),
+					'read_private_posts'     => 'read_private_' . strtolower( $args['plural'] ),
+
+					// Primitive capabilities used within map_meta_cap():
+					'delete_posts'           => 'delete_' . strtolower( $args['plural'] ),
+					'delete_private_posts'   => 'delete_private_' . strtolower( $args['plural'] ),
+					'delete_published_posts' => 'delete_published_' . strtolower( $args['plural'] ),
+					'delete_others_posts'    => 'delete_others_' . strtolower( $args['plural'] ),
+					'edit_private_posts'     => 'edit_private_' . strtolower( $args['plural'] ),
+					'edit_published_posts'   => 'edit_published_' . strtolower( $args['plural'] ),
+					'create_posts'           => 'edit_' . strtolower( $args['plural'] )
+
+				);
+
+				/**
+				 * Adding map_meta_cap will map the meta correctly.
+				 * @link https://wordpress.stackexchange.com/questions/108338/capabilities-and-custom-post-types/108375#108375
+				 */
+				$args['map_meta_cap'] = true;
+
+			}
+
+			return $args;
+		}
+
+		/**
+		 * Assign capabilities to users
+		 *
+		 * @link https://codex.wordpress.org/Function_Reference/register_post_type
+		 * @link https://typerocket.com/ultimate-guide-to-custom-post-types-in-wordpress/
+		 */
+		public function assign_capabilities() {
+
+			if ( empty( $this->cpt_config ) || ! is_array( $this->cpt_config ) ) {
+				return null;
+			}
+
+			foreach ( $this->cpt_config as $cpt => $args ) {
+
+				$caps_map = isset( $args['capabilities'] ) ? $args['capabilities'] : array();
+
+				$users = isset( $args['custom_caps_roles'] ) ? $args['custom_caps_roles'] : array( 'administrator' );
+
+				$remove_users = isset( $args['custom_caps_remove_roles'] ) ? $args['custom_caps_remove_roles'] : array();
+
+				if ( empty( $caps_map ) || empty( $users ) ) {
+					return null;
+				}
+
+				$this->add_caps_to_users( $caps_map, $users );
+
+				if ( ! empty( $remove_users ) ) {
+					$this->remove_caps_from_users( $caps_map, $remove_users );
+
+				}
+
+			}
+
 
 		}
+
+		public function add_caps_to_users( array $caps_array, array $users_array ) {
+
+			foreach ( $users_array as $user ) {
+
+				$user_role = get_role( $user );
+
+				if ( $user_role ) {
+
+					foreach ( $caps_array as $cap_map_key => $capability ) {
+
+						$user_role->add_cap( $capability );
+
+					}
+
+				}
+
+			}
+		}
+
+		public function remove_caps_from_users( array $caps_array, array $users_array ) {
+
+			foreach ( $users_array as $user ) {
+
+				$user_role = get_role( $user );
+
+				if ( $user_role ) {
+
+					foreach ( $caps_array as $cap_map_key => $capability ) {
+						$user_role->remove_cap( $capability );
+
+					}
+
+//					var_dump_die($user_role);
+
+
+				}
+
+			}
+		}
+
 
 		public function normalize_cpt_name( $cpt_name ) {
 			return strtolower( str_replace( ' ', '_', $cpt_name ) );
@@ -361,9 +497,11 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 						if ( ! is_int( $taxonomy_id ) ) {
 							// its assoc array
-							$this->register_single_post_type_taxonomy( $taxonomy_id, $tax_args, $cpt );
+							$this->add_taxonomy( $taxonomy_id, $tax_args, $cpt );
 						} else {
-							$this->register_single_post_type_taxonomy( $tax_args, array(), $cpt );
+
+							// $tax_args is the id
+							$this->add_taxonomy( $tax_args, array(), $cpt );
 						}
 
 					}
@@ -383,7 +521,7 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 			return ucwords( $id );
 		}
 
-		private function register_single_post_type_taxonomy( $taxonomy_id, $tax_args = array(), $cpt = 'post' ) {
+		private function add_taxonomy( $taxonomy_id, $tax_args = array(), $cpt = 'post' ) {
 
 
 			$single_name       = isset( $tax_args['singular_name'] ) ? $tax_args['singular_name'] : $this->get_human_readable_from_id( $taxonomy_id );
@@ -413,8 +551,6 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 			);
 
 
-//			var_dump_die( wp_parse_args( $labels_configures,  $labels  ));
-
 			$args = array(
 				'label'                 => $name,
 				'labels'                => wp_parse_args( $labels_configured, $labels ),
@@ -437,6 +573,7 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 			register_taxonomy( $taxonomy_id, $post_types, $args );
 
+			// Free memory
 			unset( $taxonomy_id, $post_types, $args, $single_name, $name, $labels, $labels_configured );
 
 		}
