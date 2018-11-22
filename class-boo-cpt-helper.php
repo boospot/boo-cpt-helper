@@ -122,17 +122,15 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 			add_action( 'init', array( $this, 'register_post_type' ) );
 			add_filter( 'bulk_post_updated_messages', array( $this, 'bulk_messages' ), 10, 2 );
 			add_filter( 'post_updated_messages', array( $this, 'messages' ) );
-
+			add_action( 'init', array( $this, 'assign_capabilities' ) );
 
 			// Different column registration for pages/posts
 			$h = isset( $args['hierarchical'] ) && $args['hierarchical'] ? 'pages' : 'posts';
 
 			add_action( "manage_{$h}_custom_column", array( $this, 'columns_display' ), 10, 2 );
 
-			add_filter( 'enter_title_here', array( $this, 'title' ) );
+//			add_filter( 'enter_title_here', array( $this, 'title' ) );
 
-
-			add_action( 'init', array( $this, 'assign_capabilities' ) );
 
 		}
 
@@ -486,6 +484,12 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 			foreach ( $this->cpt_config as $cpt => $args ) {
 
+				if ( post_type_exists( $cpt ) ) {
+					// if cpt already exist, go to next loop item
+					continue;
+				}
+
+
 				// Register our CPT
 				$response = register_post_type( $cpt, $args );
 				// If error, yell about it.
@@ -577,7 +581,14 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 				'sort'                  => ( isset( $tax_args['sort'] ) ) ? $tax_args['sort'] : '',
 			);
 
-			register_taxonomy( $taxonomy_id, $post_types, $args );
+			if ( ! taxonomy_exists( $taxonomy_id ) ) {
+				register_taxonomy( $taxonomy_id, $post_types, $args );
+			} else {
+				foreach ( $post_types as $post_type ) {
+					register_taxonomy_for_object_type( $taxonomy_id, $post_type );
+				}
+			}
+
 
 			// Free memory
 			unset( $taxonomy_id, $post_types, $args, $single_name, $name, $labels, $labels_configured );
@@ -669,6 +680,18 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 		 * @return array           Modified array
 		 */
 		public function columns( $columns ) {
+
+//			var_dump_die( $columns );
+
+			foreach ( $this->cpt_config as $cpt => $args ) {
+
+//				$new_columns = $args['columns'];
+
+				$new_columns = array( 'headshot' => sprintf( __( '%s Headshot', 'your-text-domain' ), 'test' ) );
+//				var_dump_die( $new_columns);
+				array_merge( $columns, $new_columns );
+			}
+
 			// placeholder
 			return $columns;
 		}
@@ -696,25 +719,32 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 		 * @param int $post_id The Post ID
 		 */
 		public function columns_display( $column, $post_id ) {
+
+			switch ( $column ) {
+				case 'headshot':
+					the_post_thumbnail();
+					break;
+			}
+
 			// placeholder
 		}
 
-		/**
-		 * Filter CPT title entry placeholder text
-		 * @since  0.1.0
-		 *
-		 * @param  string $title Original placeholder text
-		 *
-		 * @return string        Modified placeholder text
-		 */
-		public function title( $title ) {
-			$screen = get_current_screen();
-			if ( isset( $screen->post_type ) && $screen->post_type == $this->post_type ) {
-				return sprintf( __( '%s Title', 'cpt-core' ), $this->singular );
-			}
-
-			return $title;
-		}
+//		/**
+//		 * Filter CPT title entry placeholder text
+//		 * @since  0.1.0
+//		 *
+//		 * @param  string $title Original placeholder text
+//		 *
+//		 * @return string        Modified placeholder text
+//		 */
+//		public function title( $title ) {
+//			$screen = get_current_screen();
+//			if ( isset( $screen->post_type ) && $screen->post_type == $this->post_type ) {
+//				return sprintf( __( '%s Title', 'cpt-core' ), $this->singular );
+//			}
+//
+//			return $title;
+//		}
 
 //		/**
 //		 * Provides access to protected class properties.
