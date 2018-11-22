@@ -523,6 +523,12 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 		}
 
+		public function set_text_domain( $text_domain ) {
+
+			$this->text_domain = $text_domain;
+
+		}
+
 
 		private function get_human_readable_from_id( $id ) {
 			$id = str_replace( '_', ' ', $id );
@@ -617,8 +623,8 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 				$cpt_messages = array(
 					0 => '', // Unused. Messages start at index 1.
-					2 => __( 'Custom field updated.' ),
-					3 => __( 'Custom field deleted.' ),
+					2 => __( 'Custom field updated.', $this->text_domain ),
+					3 => __( 'Custom field deleted.', $this->text_domain ),
 					4 => sprintf( __( '%1$s updated.', $this->text_domain ), $args['singular'] ),
 					/* translators: %s: date and time of the revision */
 					5 => isset( $_GET['revision'] ) ? sprintf( __( '%1$s restored to revision from %2$s', $this->text_domain ), $args['singular'], wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
