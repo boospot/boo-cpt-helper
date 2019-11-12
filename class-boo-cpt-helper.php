@@ -507,11 +507,11 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 
 						if ( ! is_int( $taxonomy_id ) ) {
 							// its assoc array
-							$this->add_taxonomy( $taxonomy_id, $tax_args, $cpt );
+							$this->register_taxonomy( $taxonomy_id, $tax_args, $cpt );
 						} else {
 
 							// $tax_args is the id
-							$this->add_taxonomy( $tax_args, array(), $cpt );
+							$this->register_taxonomy( $tax_args, array(), $cpt );
 						}
 
 					}
@@ -537,7 +537,7 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 			return ucwords( $id );
 		}
 
-		protected function add_taxonomy( $taxonomy_id, $tax_args = array(), $cpt = 'post' ) {
+		public function register_taxonomy( $taxonomy_id, $tax_args = array(), $cpt = 'post' ) {
 
 
 			$single_name       = isset( $tax_args['singular_name'] ) ? $tax_args['singular_name'] : $this->get_human_readable_from_id( $taxonomy_id );
