@@ -9,7 +9,6 @@
             "email": "rao@booskills.com"
         }
     ],
-    "minimum-stability": "dev-master",
 	"support"    : {
 		"issues": "https://github.com/boospot/boo-cpt-helper/issues"
 	},
