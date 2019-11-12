@@ -530,14 +530,14 @@ if ( ! class_exists( 'Boo_CPT_Helper' ) ):
 		}
 
 
-		private function get_human_readable_from_id( $id ) {
+		protected function get_human_readable_from_id( $id ) {
 			$id = str_replace( '_', ' ', $id );
 			$id = str_replace( '-', ' ', $id );
 
 			return ucwords( $id );
 		}
 
-		private function add_taxonomy( $taxonomy_id, $tax_args = array(), $cpt = 'post' ) {
+		protected function add_taxonomy( $taxonomy_id, $tax_args = array(), $cpt = 'post' ) {
 
 
 			$single_name       = isset( $tax_args['singular_name'] ) ? $tax_args['singular_name'] : $this->get_human_readable_from_id( $taxonomy_id );
