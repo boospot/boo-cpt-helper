@@ -1,0 +1,20 @@
+{
+    "name": "boospot/boo-cpt-helper",
+    "description": "Helper class for creating Custom Post Types",
+    "type": "helper-class",
+    "license": "GPL-2.0+",
+    "authors": [
+        {
+            "name": "Rao Abid",
+            "email": "rao@booskills.com"
+        }
+    ],
+    "minimum-stability": "dev",
+	"support"    : {
+		"issues": "https://github.com/boospot/boo-cpt-helper/issues"
+	},
+    "require": {},
+	"autoload"   : {
+		"classmap": ["class-boo-cpt-helper.php"]
+	}
+}
